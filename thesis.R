@@ -54,8 +54,6 @@ datatry <- datagen(500, 1:5, rmod1 , 3, rep(0,5), rep(1,5), M=100)
 #-------------------------------------------------------------
 #-------------------------------------------------------------
 
-
-
 #2) Function to build OLS. => retourne une dx1 matrice.
 ols <- function(data) {
   return(solve(t(data$X)%*%data$X)%*%t(data$X)%*%data$Y)
@@ -92,69 +90,19 @@ neg_loglik <- function(beta, data, g, type = 1) {
   return(-sum(log_f))
 }
 
-# Function to compute MLE of beta. A PARTIR DE LA CA MARCHE PLUS...
+# Function to compute MLE of beta. 
 compute_mle_beta <- function(data, g, type = 1) {
-  res <- optimx(par=c(rep(0,length(data$B))), fn=neg_loglik,
-                data = data, g = g, type = type, method="BFGS")
-  resvec <- fit[ ,1:length(data$B)]
-  return(t(resvec))
-}
-
-mletry <- compute_mle_beta(datatry[[3]],g=3,type=1)
-
-## Example you should anzi try on monday...................
-mllaplace <- function(data,be) {
-  fit <- optimx(par=c(rep(0,length(data$B))), fn=neg_lllaplace, X=data$X, Y=data$Y, b=be, method="BFGS")
-  resvec <- fit[ ,1:length(data$B)]
-  return(t(resvec))
-}
-
-## Making the wole thing work...
-dati <- datagen()
-
-#-------------------------------------------------------------
-#-------------------------------------------------------------
-
-#2) Function to build OLS. => retourne une dx1 matrice.
-ols <- function(data) {
-  return(solve(t(data$X)%*%data$X)%*%t(data$X)%*%data$Y)
-}
-
-#-------------------------------------------------------------
-#-------------------------------------------------------------
-
-# Generic negative log-likelihood function
-neg_loglik <- function(data, g, type = 1) {
-  t <- data$Y-data$X%*%data$beta
-  
-  if (type == 1) {
-    # Type 1: f(t) = d * exp(-c * |t|^gamma)
-    c_gamma <- (gamma(3 / g) / gamma(1 / g))^(g/ 2)
-    d_gamma <- (g/ 2) * (gamma(3 / g) / gamma(1 / g)^3)^(1/2)
-    log_f <- log(d_gamma) - c_gamma * abs(t)^g
-
-  } else if (type == 2) {
-    # Type 2: f(t) = d * |t|^{gamma - 1} * exp(-c * |t|), gamma ≥ 1
-    c_gamma <- (gamma(g + 2) / gamma(g))^(1/2)
-    d_gamma <- (1 / (2 * gamma(g))) * (gamma(g+ 2) / gamma(g))^(g/ 2)
-    log_f <- log(d_gamma) + (g - 1) * log(abs(t)) - c_gamma * abs(t)
-    
-  } else if (type == 3) {
-    # Type 3: f(t) = d * |t|^{gamma - 1} * exp(-c * |t|^gamma), gamma ≥ 1
-    c_gamma <- gamma(2 / g + 1)^(g / 2)
-    d_gamma <- (g / 2) * gamma(2 / g + 1)^(g / 2)
-    log_f <- log(d_gamma) + (g - 1) * log(abs(t)) - c_gamma * abs(t)^g
+  neg_loglik_wrapped <- function(beta) {
+    neg_loglik(beta, data = data, g = g, type = type)
   }
-
-  return(-sum(log_f))
+  
+  res <- optimx(par = rep(0, ncol(data$X)), fn = neg_loglik_wrapped, method = "BFGS")
+  
+  resvec <- res[, 1:ncol(data$X)]  # fixed res -> res
+  return(t(resvec))
 }
 
-# Function to compute MLE of beta
-compute_mle_beta <- function(data, g, type = 1) {
-  res <- optimize(neg_loglik,
-                  data = data, gamma = g, type = type)
-  return(res$minimum)
-}
+mletry <- compute_mle_beta(datatry[[3]],3)
 
-## Making the wole thing work...
-dati <- datagen()
+#-------------------------------------------------------------
+#-------------------------------------------------------------
