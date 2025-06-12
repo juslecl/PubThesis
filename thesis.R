@@ -13,16 +13,13 @@ rmod1 <- function(n, g, s) {
 
 rmod2 <- function(n, g, s) {
   c_gamma <- (gamma(g + 2) / gamma(g))^(1/2)
-  # Draw from Gamma(gamma, rate = c_gamma)
   t <- rgamma(n, shape = g, rate = c_gamma)
-  # Symmetrize
   signs <- s*sample(c(-1, 1), n, replace = TRUE)
   return(signs * t)
 }
 
 rmod3 <- function(n, g, s) {
   c_gamma <- gamma(2 / g + 1)^(g/ 2)
-  # Scale parameter for Weibull: b = c_gamma^{-1/gamma}
   scale <- c_gamma^(-1 / g)
   t <- rweibull(n, shape = g, scale = scale)
   signs <- s*sample(c(-1, 1), n, replace = TRUE)
