@@ -4,12 +4,10 @@ library(optimx)
 library(BiocParallel)
 #0) Create functions to draw errors followign one of the distributions at random.
 rmod1 <- function(n, g, s) {
-  library(normalp)
-  # Constants
+  library(gnorm)
   c_gamma <- (gamma(3 / g) / gamma(1 / g))^(g/ 2)
-  # Draw from exp(-|x|^gamma) then rescale
-  x <- rnormp(n, mu = 0, sigmap = 1, p = g)
-  scale <- s*c_gamma^(-1 / g)
+  x <- rgnorm(n, mu = 0, alpha = 1, beta = g)
+  scale <- s * c_gamma^{-1 / g}
   return(x * scale)
 }
 
