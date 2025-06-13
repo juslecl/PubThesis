@@ -5,15 +5,15 @@ library(BiocParallel)
 #0) Create functions to draw errors followign one of the distributions at random.
 rmod1 <- function(n, g, s) {
   library(gnorm)
-  c_gamma <- (gamma(3 / g) / gamma(1 / g))^(g/ 2)
+  c_gamma <- (gamma(3 / g) / gamma(1 / g))^(g / 2)
   x <- rgnorm(n, mu = 0, alpha = 1, beta = g)
-  scale <- s * c_gamma^{-1 / g}
+  scale <- s * c_gamma^(-1 / g)
   return(x * scale)
 }
 
 rmod2 <- function(n, g, s) {
   c_gamma <- (gamma(g + 2) / gamma(g))^(1/2)
-  t <- rgamma(n, shape = g, rate = c_gamma)
+  t <- rgamma(n, shape = g, scale = c_gamma^(-1))
   signs <- s*sample(c(-1, 1), n, replace = TRUE)
   return(signs * t)
 }
@@ -24,7 +24,7 @@ rmod3 <- function(n, g, s) {
   t <- rweibull(n, shape = g, scale = scale)
   signs <- s*sample(c(-1, 1), n, replace = TRUE)
   return(signs * t)
-}
+} 
 
 #-------------------------------------------------------------
 #-------------------------------------------------------------
