@@ -119,6 +119,8 @@ metrics <- function(mleols_res){
     norm2mle <- norm(dati[,1]-dati[,3],type="2")
     return(list(norm2ols,norm2mle))
   },BPPARAM=param)})
+  norms <- matrix(unlist(norms),nrow=100,ncol=2,byrow=T)
+  colnames(norms) <- c("OLSE","MLE")
   empirical_means <- vector("list", 2)
   empirical_vars  <- vector("list", 2)
   for (j in 1:2) {
@@ -126,8 +128,10 @@ metrics <- function(mleols_res){
     empirical_means[[j]] <- rowMeans(mat_j)
     empirical_vars[[j]]  <- apply(mat_j, 1, var)
   }
-  names(empirical_means) <- names(empirical_vars)  <- paste0("vector_", c("mle","olse"))
-  return(list(norms,empirical_means,empirical_vars))
+  empirical_means <- matrix(unlist(empirical_means),ncol=2,byrow=F)
+  empirical_vars <- matrix(unlist(empirical_vars),ncol=2,byrow=F)
+  colnames(empirical_means) <- colnames(empirical_vars)  <- c("MLE","OLSE")
+  return(list(NORMS=norms,MEANS=empirical_means,VARS=empirical_vars))
 }
 
 #-------------------------------------------------------------
