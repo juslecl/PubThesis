@@ -1,7 +1,9 @@
 set.seed(123)
+library(vcvComp)
 library(stats)
 library(optimx)
 library(BiocParallel)
+
 #0) Create functions to draw errors followign one of the distributions at random.
 rmod1 <- function(n, g, s) {
   library(gnorm)
@@ -43,6 +45,18 @@ datagen <- function(n, param, rcdf, g, meanX, sdX,  M=1000) {
     datasets[[m]] <- list(Y = y, X = x, P = param, E = eps)  
   }
   return(datasets)  
+}
+
+EXXT <- function(datasets){
+  d <- ncol(datasets[[1]]$X)
+  n <- nrow(datasets[[1]]$X)
+  EXXT <- matrix(0, nrow = d, ncol = d)
+  for (data in datasets) {
+    X <- data$X
+    EXXT <- EXXT + t(X) %*% X
+  }
+  EXXT <- EXXT / (length(datasets) * n)
+  return(EXXT)
 }
 
 #-------------------------------------------------------------
@@ -129,12 +143,11 @@ metrics <- function(mleols_res){
   for (j in 1:2) {
     mat_j <- sapply(mleols_res, function(m) m[-nrow(mleols_res[[1]]), j])
     empirical_means[[j]] <- rowMeans(mat_j)
-    empirical_vars[[j]]  <- apply(mat_j, 1, var)
+    empirical_vars[[j]]  <- cov(t(mat_j))
   }
   empirical_means <- matrix(unlist(empirical_means),ncol=2,byrow=F)
-  empirical_vars <- matrix(unlist(empirical_vars),ncol=2,byrow=F)
-  colnames(empirical_means) <- colnames(empirical_vars)  <- c("MLE","OLSE")
-  return(list(NORMS=norms,MEANS=empirical_means,VARS=empirical_vars))
+  colnames(empirical_means) <- c("MLE","OLSE")
+  return(list(NORMS=norms,MEANS=empirical_means,VARS=empirical_vars,MSE=apply(norms,2,function(i) mean(i^2))))
 }
 
 #-------------------------------------------------------------
@@ -161,4 +174,7 @@ metrics12 <- metrics(mleols12)
 metrics13 <- metrics(mleols13)
 
 # GRAPHS
-boxplot(metrics11[[1]],main="Euclidean norm to the true coefficients'vector")
+par(mfrow=c(1,3))
+boxplot(metrics11[[1]],ylab="Euclidean norm")
+boxplot(metrics12[[1]],ylab="Euclidean norm")
+boxplot(metrics13[[1]],ylab="Euclidean norm")
