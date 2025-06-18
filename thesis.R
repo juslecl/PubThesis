@@ -119,16 +119,18 @@ mleols <- function(data, g, type){
   res <- bptry({bplapply(seq_len(M), function(nb){
     mle <- compute_mle_beta(data[[nb]], g, type)
     olse <- c(ols(data[[nb]]),NA)
-    print(data[[nb]]$P)
     return(cbind.data.frame(mle=mle,ols=olse,truth=data[[nb]]$P))
   },BPPARAM=param)})
-  return(res)
+  ordremle <- matrix(unlist(lapply(res,function(i) return(i[-nrow(i),1]))),ncol=5,byrow=T)
+  ordreols <- matrix(unlist(lapply(res,function(i) return(i[-nrow(i),2]))),ncol=5,byrow=T)
+  return(list(res,ordremle,ordreols))
 }
 
 #-------------------------------------------------------------
 #-------------------------------------------------------------
 metrics <- function(mleols_res){
   param <- BatchtoolsParam(workers=32)
+  mleols_res <- mleols_res[[1]]
   M <- length(mleols_res)
   norms <- bptry({bplapply(seq_len(M), function(nb){
     dati <- mleols_res[[nb]][-nrow(mleols_res[[1]]),]
@@ -161,20 +163,104 @@ beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
 meanX <- sample(seq(from=-5,to=5,by=.01),d)
 sdX <- sample(seq(from=0,to=2,by=.1),d)
 
-data11 <- datagen(n, beta, rmod1 , 3, meanX, sdX)
-data12 <- datagen(n, beta, rmod2 , 3, meanX, sdX)
-data13 <- datagen(n, beta, rmod3 , 3, meanX, sdX)
+for (i in 1:3) {
+  rmod <- get(paste0("rmod", i))
+  assign(paste0("data1", i), datagen(n, beta, rmod, 7, meanX, sdX))
+}
 
-mleols11 <- mleols(data11, 3, 1)
-mleols12 <- mleols(data12, 3, 2)
-mleols13 <- mleols(data13, 3, 3)
+for (i in 1:3) {
+  data_obj <- get(paste0("data1", i))
+  assign(paste0("mleols1", i), mleols(data_obj, 7, i))
+}
 
-metrics11 <- metrics(mleols11)
-metrics12 <- metrics(mleols12)
-metrics13 <- metrics(mleols13)
+for (i in 1:3) {
+  mleols_obj <- get(paste0("mleols1", i))
+  assign(paste0("metrics1", i), metrics(mleols_obj))
+}
 
-# GRAPHS
+par(mfrow = c(1, 3))
+for (i in 1:3) {
+  metrics_obj <- get(paste0("metrics1", i))
+  boxplot(metrics_obj[[1]], ylab = "Euclidean norm", main = paste("Model", i))
+}
+
 par(mfrow=c(1,3))
-boxplot(metrics11[[1]],ylab="Euclidean norm")
-boxplot(metrics12[[1]],ylab="Euclidean norm")
-boxplot(metrics13[[1]],ylab="Euclidean norm")
+for (i in 1:3){
+plot(density(get(paste("mleols1", i, sep = ""))[[2]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="red",main="")
+lines(density(get(paste("mleols1", i, sep = ""))[[3]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="blue")
+legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
+}
+
+# SIMULATION 1
+set.seed(123)
+d <- 5
+n <- 500
+beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
+meanX <- sample(seq(from=-5,to=5,by=.01),d)
+sdX <- sample(seq(from=0,to=2,by=.1),d)
+
+for (i in 1:3) {
+  rmod <- get(paste0("rmod", i))
+  assign(paste0("data1", i), datagen(n, beta, rmod, 5, meanX, sdX))
+}
+
+for (i in 1:3) {
+  data_obj <- get(paste0("data1", i))
+  assign(paste0("mleols1", i), mleols(data_obj, 5, i))
+}
+
+for (i in 1:3) {
+  mleols_obj <- get(paste0("mleols1", i))
+  assign(paste0("metrics1", i), metrics(mleols_obj))
+}
+
+par(mfrow = c(1, 3))
+for (i in 1:3) {
+  metrics_obj <- get(paste0("metrics1", i))
+  boxplot(metrics_obj[[1]], ylab = "Euclidean norm", main = paste("Model", i))
+}
+
+par(mfrow=c(1,3))
+for (i in 1:3){
+  plot(density(get(paste("mleols1", i, sep = ""))[[2]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="red",main="")
+  lines(density(get(paste("mleols1", i, sep = ""))[[3]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="blue")
+  legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
+}
+
+
+# SIMULATION 1
+set.seed(123)
+d <- 5
+n <- 1000
+beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
+meanX <- sample(seq(from=-5,to=5,by=.01),d)
+sdX <- sample(seq(from=0,to=2,by=.1),d)
+
+for (i in 1:3) {
+  rmod <- get(paste0("rmod", i))
+  assign(paste0("data1", i), datagen(n, beta, rmod, 5, meanX, sdX))
+}
+
+for (i in 1:3) {
+  data_obj <- get(paste0("data1", i))
+  assign(paste0("mleols1", i), mleols(data_obj, 5, i))
+}
+
+for (i in 1:3) {
+  mleols_obj <- get(paste0("mleols1", i))
+  assign(paste0("metrics1", i), metrics(mleols_obj))
+}
+
+par(mfrow = c(1, 3))
+for (i in 1:3) {
+  metrics_obj <- get(paste0("metrics1", i))
+  boxplot(metrics_obj[[1]], ylab = "Euclidean norm", main = paste("Model", i))
+}
+
+par(mfrow=c(1,3))
+for (i in 1:3){
+  plot(density(get(paste("mleols1", i, sep = ""))[[2]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="red",main="")
+  lines(density(get(paste("mleols1", i, sep = ""))[[3]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="blue")
+  legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
+}
+
