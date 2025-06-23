@@ -158,79 +158,6 @@ metrics <- function(mleols_res){
 # SIMULATION 1
 set.seed(123)
 d <- 5
-n <- 500
-beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
-meanX <- sample(seq(from=-5,to=5,by=.01),d)
-sdX <- sample(seq(from=0,to=2,by=.1),d)
-
-for (i in 1:3) {
-  rmod <- get(paste0("rmod", i))
-  assign(paste0("data1", i), datagen(n, beta, rmod, 7, meanX, sdX))
-}
-
-for (i in 1:3) {
-  data_obj <- get(paste0("data1", i))
-  assign(paste0("mleols1", i), mleols(data_obj, 7, i))
-}
-
-for (i in 1:3) {
-  mleols_obj <- get(paste0("mleols1", i))
-  assign(paste0("metrics1", i), metrics(mleols_obj))
-}
-
-par(mfrow = c(1, 3))
-for (i in 1:3) {
-  metrics_obj <- get(paste0("metrics1", i))
-  boxplot(metrics_obj[[1]], ylab = "Euclidean norm", main = paste("Model", i))
-}
-
-par(mfrow=c(1,3))
-for (i in 1:3){
-plot(density(get(paste("mleols1", i, sep = ""))[[2]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="red",main="")
-lines(density(get(paste("mleols1", i, sep = ""))[[3]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="blue")
-legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
-}
-
-# SIMULATION 1
-set.seed(123)
-d <- 5
-n <- 500
-beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
-meanX <- sample(seq(from=-5,to=5,by=.01),d)
-sdX <- sample(seq(from=0,to=2,by=.1),d)
-
-for (i in 1:3) {
-  rmod <- get(paste0("rmod", i))
-  assign(paste0("data1", i), datagen(n, beta, rmod, 5, meanX, sdX))
-}
-
-for (i in 1:3) {
-  data_obj <- get(paste0("data1", i))
-  assign(paste0("mleols1", i), mleols(data_obj, 5, i))
-}
-
-for (i in 1:3) {
-  mleols_obj <- get(paste0("mleols1", i))
-  assign(paste0("metrics1", i), metrics(mleols_obj))
-}
-
-par(mfrow = c(1, 3))
-for (i in 1:3) {
-  metrics_obj <- get(paste0("metrics1", i))
-  boxplot(metrics_obj[[1]], ylab = "Euclidean norm", main = paste("Model", i))
-}
-
-par(mfrow=c(1,3))
-for (i in 1:3){
-  plot(density(get(paste("mleols1", i, sep = ""))[[2]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="red",main="")
-  lines(density(get(paste("mleols1", i, sep = ""))[[3]][, 2]),ylab="Density", xlab=expression(hat(beta)),col="blue")
-  legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
-}
-
-
-# SIMULATION 1
-set.seed(123)
-d <- 5
 n <- 1000
 beta <- c(sample(seq(from=-3,to=3,by=.01),d),sample(seq(from=1,to=3,by=.01),1))
 meanX <- sample(seq(from=-5,to=5,by=.01),d)
@@ -264,3 +191,75 @@ for (i in 1:3){
   legend("topleft", legend=c("MLE","OLSE"),col=c("red","blue"),pch = "_")
 }
 
+mse <- c(0.236 , 0.214 , 0.236 , 0.156 , 0.236 , 0.119, 0.126 , 0.111 , 0.126 , 0.0768 , 0.126 , 0.057 ,11.8 , 10.0 , 11.8 , 6.64 , 11.9 , 4.79,0.259 , 0.126 , 0.246 , 0.0614 , 0.220 , 0.0264,0.117 , 0.0435 ,0.121 , 0.024 , 0.121 , 0.0122,10.9 , 4.47 , 10.7 , 1.67 , 11.5 , 1.18,0.247 , 0.0481 , 0.264 , 0.0135 , 0.256 ,  0.00603,0.120 , 0.0182 , 0.120 , 0.00555 , 0.122 ,0.00292,11.0 , 1.78 , 10.9 , 0.54  , 11.1 , 0.27)
+est <- rep(c("OLSE","MLE"),27)
+fam <- rep(1:3,each=18)
+nd <- rep(rep(c(100,200,400/3),each=6),3)
+gamma <- rep(rep(c(3,5,7),each=2),9)
+
+par(mfrow = c(1, 3))
+
+est_colors <- as.factor(est)
+col_vector <- rainbow(length(levels(est_colors)))[est_colors]
+
+
+plot(nd[1:18], mse[1:18],
+     xlab = "n/d", ylab = "MSE",
+     main = "MSE against n/d for family 1",
+     xlim = c(80, 220),
+     col = col_vector[1:18], pch = 19)
+
+text(nd[1:18], mse[1:18], labels = gamma[1:18], pos = 3, cex = 0.7)
+
+
+plot(nd[19:36], mse[19:36],
+     xlab = "n/d", ylab = "MSE",
+     main = "MSE against n/d for family 2",
+     xlim = c(80, 220),
+     col = col_vector[19:36], pch = 19)
+
+text(nd[19:36], mse[19:36], labels = gamma[19:36], pos = 3, cex = 0.7)
+
+plot(nd[37:54], mse[37:54],
+     xlab = "n/d", ylab = "MSE",
+     main = "MSE against n/d for family 3",
+     xlim = c(80, 220),
+     col = col_vector[37:54], pch = 19)
+
+text(nd[37:54], mse[37:54], labels = gamma[37:54], pos = 3, cex = 0.7)
+
+legend("topright", legend = levels(est_colors), col = rainbow(length(levels(est_colors))), pch = 19, cex = 0.6)
+
+# --------------------------------------------------------------------------------------------
+nd <- rep(rep(c(100,200,"400/3"),each=6),3)
+
+par(mfrow = c(1, 3))
+
+est_factor <- as.factor(est)
+est_levels <- levels(est_factor)
+colors <- rainbow(length(est_levels))
+col_vector <- colors[est_factor]
+
+for (f in 1:3) {
+  idx <- which(fam == f)
+  
+  plot(gamma[idx], mse[idx],
+       xlab = expression(gamma),
+       ylab = "MSE",
+       main = paste("Family", f),
+       col = col_vector[idx],
+       pch = 19,
+       ylim = range(mse),
+       xlim = range(gamma))
+  
+  text(gamma[idx], mse[idx],
+       labels = nd[idx],
+       pos = 3,
+       cex = 0.7)
+}
+
+legend("topright", legend = est_levels,
+       col = colors,
+       pch = 19,
+       title = "Estimator",
+       cex = 0.8)
