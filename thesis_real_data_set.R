@@ -120,6 +120,8 @@ beta3 <- pred(betatry3)
 test1 <- test(betatry1,realdata)
 test2 <- test(betatry2,realdata)
 test3 <- test(betatry3,realdata)
+
+# When plotting the residuals of the OLSE model they look quasi if not super standard normal distributed with mean 0 and var 27.
 # ---------------------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------
 
