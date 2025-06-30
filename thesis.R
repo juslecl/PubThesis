@@ -37,7 +37,6 @@ rmod3 <- function(n, g, s) {
 
 #1) Create a dataset with X following a normal but different patterns for the error.
 datagen <- function(n, obj, rcdf, g, meanX, sdX,  M=1000) {
-  print(obj)
   bita <- obj[-length(obj)]
   s <- obj[length(obj)]
   d <- length(meanX)
@@ -79,7 +78,6 @@ ols <- function(data) {
 neg_loglik <- function(obj, data, g, type = 1) { #param is a vector of length(bita)+1
   t <- (data$Y-data$X%*%obj[1:(length(obj)-1)])/obj[length(obj)]
   s <- obj[length(obj)]
-  print(s)
   
   if (type == 1) {
     # Type 1: f(t) = d/s * exp(-c * |t|^gamma)
@@ -223,7 +221,7 @@ run_simulation <- function(d, n, g) {
   p2 <- ggplot(density_df, aes(x = x, y = y, color = Estimator)) +
     geom_line(linewidth = 1.1) +
     facet_wrap(~Model, scales = "free", nrow = 1) +
-    labs(x = expression(hat(bita)[2]), y = "Density", title = "Comparison of the estimators'densities (Component 2)") +
+    labs(x = expression(hat(beta)[2]), y = "Density", title = "Comparison of the estimators'densities (Component 2)") +
     theme_minimal(base_size = 14) +
     scale_color_manual(values = c("MLE" = "red", "OLS" = "blue")) +
     theme(legend.position = "top")
