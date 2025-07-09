@@ -342,61 +342,103 @@ eta3 <- function(gamma, d) {
 }
 
 # Create gamma sequences for respective valid domains
-gamma_seq_eta1 <- seq(0.6, 10, length.out = 1000)
-gamma_seq_eta2_eta3 <- seq(2.01, 10, length.out = 1000)
+gamma_vals1 <- seq(0.5, 7, length.out = 1000)
+gamma_vals2 <- seq(2, 7, length.out = 1000)
+d_vals <- c(5,10,15,20)
 
-# Evaluate eta values
-df_eta1 <- data.frame(
-  gamma = gamma_seq_eta1,
-  eta = eta1(gamma_seq_eta1, d)
-)
 
-df_eta2 <- data.frame(
-  gamma = gamma_seq_eta2_eta3,
-  eta = eta2(gamma_seq_eta2_eta3, d)
-)
+# Create dataframes for plotting
+make_df <- function(eta_fun, gamma_vals, d_vals) {
+  do.call(rbind, lapply(d_vals, function(d) {
+    data.frame(
+      gamma = gamma_vals,
+      eta = sapply(gamma_vals, function(g) eta_fun(g, d)),
+      d = factor(d)
+    )
+  }))
+}
 
-df_eta3 <- data.frame(
-  gamma = gamma_seq_eta2_eta3,
-  eta = eta3(gamma_seq_eta2_eta3, d)
-)
+df_eta1 <- make_df(eta1, gamma_vals1, d_vals)
+df_eta1$eta <- ifelse(is.na(df_eta1$eta),0,df_eta1$eta)
+df_eta2 <- make_df(eta2, gamma_vals2, d_vals)
+df_eta2$eta <- ifelse(is.na(df_eta2$eta),0,df_eta2$eta)
+df_eta3 <- make_df(eta3, gamma_vals2, d_vals)
+df_eta3$eta <- ifelse(is.na(df_eta3$eta),0,df_eta3$eta)
 
-# Plot eta_1
-p1 <- ggplot(df_eta1, aes(x = gamma, y = eta)) +
-  geom_line(color = "darkred", size = 1.1) +
+# Compute maximum points
+get_max_points <- function(eta_fun, d_vals, lower, upper) {
+  do.call(rbind, lapply(d_vals, function(d) {
+    res <- optimize(function(g) -eta_fun(g, d), interval = c(lower, upper))
+    data.frame(
+      gamma = res$minimum,
+      eta = -res$objective,
+      d = factor(d)
+    )
+  }))
+}
+
+max_eta1 <- get_max_points(eta1, d_vals, 0.5, 20)
+max_eta2 <- get_max_points(eta2, d_vals, 2.01, 20)
+max_eta3 <- get_max_points(eta3, d_vals, 2.01, 20)
+
+# Plot eta1
+p1 <- ggplot(df_eta1, aes(x = gamma, y = eta, color = d)) +
+  geom_line(size = 1.1) +
+  geom_point(data = max_eta1, aes(x = gamma, y = eta), size = 3, shape = 21, fill = "white", inherit.aes = FALSE) +
+  geom_text(
+    data = max_eta1,
+    aes(x = gamma, y = eta, label = paste0("γ=", round(gamma, 2))),
+    vjust = -1.2,
+    size = 4,
+    inherit.aes = FALSE
+  ) +
   labs(
-    title = "Asymptotic relative efficiency for family 1",
-    subtitle = bquote(d == .(d)),
+    title = " ",
     x = expression(gamma), y = expression(eta[1](gamma))
   ) +
-  theme_minimal(base_size = 14)
+  theme_minimal(base_size = 14) +
+  guides(color = guide_legend(title = "dimension d")) 
 
-# Plot eta_2
-p2 <- ggplot(df_eta2, aes(x = gamma, y = eta)) +
-  geom_line(color = "darkblue", size = 1.1) +
+# Plot eta2
+p2 <- ggplot(df_eta2, aes(x = gamma, y = eta, color = d)) +
+  geom_line(size = 1.1) +
+  geom_point(data = max_eta2, aes(x = gamma, y = eta), size = 3, shape = 21, fill = "white", inherit.aes = FALSE) +
+  geom_text(
+    data = max_eta2,
+    aes(x = gamma, y = eta, label = paste0("γ=", round(gamma, 2))),
+    vjust = -1.2,
+    size = 4,
+    inherit.aes = FALSE
+  ) +
   labs(
-    title = "Asymptotic relative efficiency for family 2",
-    subtitle = bquote(d == .(d)),
+    title = " ",
     x = expression(gamma), y = expression(eta[2](gamma))
   ) +
-  theme_minimal(base_size = 14)
+  theme_minimal(base_size = 14) +
+  guides(color = guide_legend(title = "dimension d")) 
 
-# Plot eta_3
-p3 <- ggplot(df_eta3, aes(x = gamma, y = eta)) +
-  geom_line(color = "forestgreen", size = 1.1) +
+
+# Plot eta3
+p3 <- ggplot(df_eta3, aes(x = gamma, y = eta, color = d)) +
+  geom_line(size = 1.1) +
+  geom_point(data = max_eta3, aes(x = gamma, y = eta), size = 3, shape = 21, fill = "white", inherit.aes = FALSE) +
+  geom_text(
+    data = max_eta3,
+    aes(x = gamma, y = eta, label = paste0("γ=", round(gamma, 2))),
+    vjust = -1.2,
+    size = 4,
+    inherit.aes = FALSE
+  ) +
   labs(
-    title = "Asymptotic relative efficiency for family 3",
-    subtitle = bquote(d == .(d)),
+    title = " ",
     x = expression(gamma), y = expression(eta[3](gamma))
   ) +
-  theme_minimal(base_size = 14)
-
-# Save each plot
-ggsave(sprintf("eta1_d%d.pdf", d), p1, width = 7, height = 5)
-ggsave(sprintf("eta2_d%d.pdf", d), p2, width = 7, height = 5)
-ggsave(sprintf("eta3_d%d.pdf", d), p3, width = 7, height = 5)
+  theme_minimal(base_size = 14) +
+  guides(color = guide_legend(title = "dimension d")) 
 
 
-
-
+# Find the values of gamma for which eta1,2,3 are maximized.
+gamma_star_1 <- optimize(function(g) -eta1(g, d), interval = c(1/2, 20), maximum = FALSE)
+gamma_star_2 <- optimize(function(g) -eta2(g, d), interval = c(1/2, 20), maximum = FALSE)
+gamma_star_3 <- optimize(function(g) -eta3(g, d), interval = c(1/2, 20), maximum = FALSE)
 

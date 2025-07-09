@@ -1,21 +1,3 @@
-library(readxl)
-library(stats)
-library(optimx)
-library(BiocParallel)
-library(MASS)
-
-# Upload data and visualize it
-data(Boston)
-
-model <- lm(medv ~ ., data = Boston)
-summary(model)
-plot(Boston$lstat, Boston$medv)
-abline(lm(medv ~ lstat, data = Boston), col = "red")
-plot(density(residuals(model)))
-
-# ---------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------
-
 bootids <- function(data,iter=100){
   ids <- matrix(NA,ncol=iter,nrow=floor(nrow(data)*.6))
   for (i in seq_len(iter)){
@@ -107,82 +89,18 @@ test <- function(mleols_obj,data){
   return(list(res,mean_res))
 }
 
+# add an intercept.
+
+
 set.seed(1234)
-betatry1 <- mleols(Boston, g=1.9, type=1)
-betatry2 <- mleols(Boston, g=1.25, type=2)
-betatry3 <- mleols(Boston, g=0.75, type=3)
+betatry1 <- mleols(hprd, g=2, type=1)
+betatry2 <- mleols(hprd, g=2, type=2)
+betatry3 <- mleols(hprd, g=2, type=3)
 
 beta1 <- pred(betatry1)
 beta2 <- pred(betatry2)
 beta3 <- pred(betatry3)
 
-test1 <- test(betatry1,Boston)
-test2 <- test(betatry2,Boston)
-test3 <- test(betatry3,Boston)
-
-# When plotting the residuals of the OLSE model they look quasi if not super standard normal distributed with mean 0 and var 27.
-# ---------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------
-# Load required package
-library(ggplot2)
-
-# 1st density: f1_gamma(t)
-f1_gamma <- function(t, gamma) {
-  c_gamma <- (gamma(3 / gamma) / gamma(1 / gamma))^(gamma / 2)
-  d_gamma <- (gamma / 2) * (gamma(3 / gamma) / gamma(1 / gamma)^3)^(1/2)
-  d_gamma * exp(-c_gamma * abs(t)^gamma)
-}
-
-# 2nd density: f2_gamma(t)
-f2_gamma <- function(t, gamma) {
-  c_gamma <- (gamma(gamma + 2) / gamma(gamma))^(1/2)
-  d_gamma <- (1 / (2 * gamma(gamma))) * (gamma(gamma + 2) / gamma(gamma))^(gamma / 2)
-  d_gamma * abs(t)^(gamma - 1) * exp(-c_gamma * abs(t))
-}
-
-# 3rd density: f3_gamma(t)
-f3_gamma <- function(t, gamma) {
-  c_gamma <- gamma(2 / gamma + 1)^(gamma / 2)
-  d_gamma <- (gamma / 2) * gamma(2 / gamma + 1)^(gamma / 2)
-  d_gamma * abs(t)^(gamma - 1) * exp(-c_gamma * abs(t)^gamma)
-}
-
-# Function to create a dataframe for plotting
-generate_df <- function(f, gamma, name, t_vals) {
-  data.frame(
-    t = t_vals,
-    density = sapply(t_vals, function(t) f(t, gamma)),
-    type = name
-  )
-}
-
-# Define t range and gammas to plot
-t_vals <- seq(-5, 5, length.out = 1000)
-gammas <- c(0.5, 1, 2, 3)
-
-# Create plot data
-plot_data <- do.call(rbind, lapply(gammas, function(g) {
-  rbind(
-    generate_df(f1_gamma, g, paste0("f1, γ=", g), t_vals),
-    generate_df(f2_gamma, g, paste0("f2, γ=", g), t_vals),
-    generate_df(f3_gamma, g, paste0("f3, γ=", g), t_vals)
-  )
-}))
-
-# Plot
-ggplot(plot_data, aes(x = t, y = density, color = type)) +
-  geom_line(size = 1) +
-  labs(title = "Different densities for varying γ", y = "Density f(t)", x = "t") +
-  theme_minimal() +
-  theme(legend.title = element_blank())
-
-
-> apply(test3[[2]],2,mean)
-MLE     OLSE 
-27.75168 26.81522 
-> apply(test2[[2]],2,mean)
-MLE     OLSE 
-27.59486 27.41989 
-> apply(test1[[2]],2,mean)
-MLE     OLSE 
-25.69225 25.85891 
+test1 <- test(betatry1,hprd)
+test2 <- test(betatry2,hprd)
+test3 <- test(betatry3,hprd)
